@@ -7,13 +7,12 @@ router.get('/', function(req, res, next) {
   res.send('respond with a resource');
 });
 
-router.post('/auth', function(request, reply){
+router.post('/auth', async function(request, reply){
   const { error, value } = loginSchema.validate(request.body)
   if(error){
     console.log(error)
   }
-  userLogin(request.body);
-  reply.status(200).send(`Hello mrudul ${request.body.email}`)
+  const res = await userLogin(request.body, request, reply);
 })
 
 router.post('/register', async function( request, reply ){

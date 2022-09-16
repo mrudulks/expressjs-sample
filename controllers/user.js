@@ -11,11 +11,31 @@ function hashPassword(rawPassword, salt){
     return `pbkdf2Sync:${salt}:${hashed}`
 }
 
-async function userLogin(body){
-    console.log(body.password);
-    const salt = saltGen();
-    console.log(hashPassword(body.password, salt))
+function passwordCheck(rawPassword, userPassword){
+    const salt = userPassword.split(':')[1];
+    const hashed = hashPassword(rawPassword, salt)
+    return hashed
 }
+
+async function userLogin(body, request, reply){
+    const { username, password }  = body;
+    console.log(username, password);
+    const user = await database.table('users').select().where({ email:username });
+    if(user == ''){
+        reply.status(400).send({ message:"User not found"});
+        return
+    }
+    const rawPassword = password;
+    const userPassword = user[0].password;
+    console.log("User password",userPassword)
+    const hashedPassword = passwordCheck(rawPassword, userPassword)
+    if( hashedPassword == userPassword ){
+        reply.status(200).send({ "message":"Login Success"});
+        return;
+    }
+    reply.status(400).send({ "message":"Login Failed"});
+} 
+
 
 async function userRegister(body){
     const { name, email, password } = body; 
